@@ -1,7 +1,6 @@
-package se.centril.atetria.framework.gdx;
+package com.badlogic.gdx.graphics;
 
 import com.badlogic.gdx.graphics.Color;
-
 
 public enum WebColors {
 	// Pink colors.
