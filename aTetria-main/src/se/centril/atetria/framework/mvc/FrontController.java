@@ -28,6 +28,9 @@ public abstract class FrontController {
 	/** History "stack" of controllers. Last is most recent. */
 	protected List<Controller> history = Lists.newArrayList();
 
+	/** true = identity is used instead of equality when checking if controller is same. */
+	private boolean useIdentity;
+
 	/* --------------------------------------
 	 * Hooks related:
 	 * --------------------------------------
@@ -66,8 +69,32 @@ public abstract class FrontController {
 	 */
 	public abstract Controller getInitController();
 
+	/**
+	 * true = identity is used instead of equality when checking if controller is the same/front.
+	 *
+	 * @param flag whether or not to use identity.
+	 */
+	public void useIdentity( boolean flag ) {
+		this.useIdentity = flag;
+	}
+
+	/**
+	 * If true, identity is used instead of equality when checking if controller is same/front.
+	 *
+	 * @return whether or not identity is used.
+	 */
+	public boolean isUsingIdentity() {
+		return this.useIdentity;
+	}
+
+	/**
+	 * Checks if controller is the current one/front.
+	 *
+	 * @param ctrl the controller to test for.
+	 * @return true if front/current.
+	 */
 	public boolean isControllerFront( Controller ctrl ) {
-		return this.ctrl == ctrl;
+		return this.useIdentity ? this.ctrl == ctrl : this.ctrl.equals( ctrl );
 	}
 
 	/**
@@ -76,7 +103,7 @@ public abstract class FrontController {
 	 * @param ctrl the controller to change to.
 	 */
 	public void change( Controller ctrl ) {
-		if ( this.ctrl == ctrl ) {
+		if ( this.isControllerFront( ctrl ) ) {
 			return;
 		}
 
@@ -93,7 +120,7 @@ public abstract class FrontController {
 	 * @param ctrl the controller to change to.
 	 */
 	public void changeDispose( Controller ctrl ) {
-		if ( this.ctrl == ctrl ) {
+		if ( this.isControllerFront( ctrl ) ) {
 			return;
 		}
 
@@ -130,7 +157,7 @@ public abstract class FrontController {
 	 * @param ctrl the controller to change to.
 	 */
 	public void changeClear( Controller ctrl ) {
-		if ( this.ctrl == ctrl ) {
+		if ( this.isControllerFront( ctrl ) ) {
 			return;
 		}
 
@@ -147,7 +174,7 @@ public abstract class FrontController {
 	 * @param ctrl the controller to change to.
 	 */
 	public void changeClearDispose( Controller ctrl ) {
-		if ( this.ctrl == ctrl ) {
+		if ( this.isControllerFront( ctrl ) ) {
 			return;
 		}
 
@@ -181,7 +208,7 @@ public abstract class FrontController {
 		int index = this.backIndex( amount );
 
 		if ( index < 0 ) {
-			throw new IndexOutOfBoundsException( "The given history is is stored." );
+			throw new IndexOutOfBoundsException( "There's no stored history for " + amount + " of controllers back in time." );
 		}
 
 		// Forget everything more recent than wanted index.
