@@ -19,7 +19,6 @@ package se.centril.atetria;
 import se.centril.atetria.controller.GameController;
 import se.centril.atetria.framework.gdx.GdxFrontController;
 import se.centril.atetria.framework.mvc.Controller;
-import se.centril.atetria.framework.mvc.View;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL10;

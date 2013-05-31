@@ -19,8 +19,6 @@ package se.centril.atetria.model;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-import com.google.common.base.Preconditions;
-
 import se.centril.atetria.framework.geom.FinalPosition;
 import se.centril.atetria.framework.geom.MutablePosition;
 import se.centril.atetria.framework.geom.Position;
@@ -33,6 +31,8 @@ import se.centril.atetria.model.command.HorizontalCommand;
 import se.centril.atetria.model.command.PieceCommand;
 import se.centril.atetria.model.command.RotationCommand;
 import se.centril.atetria.model.command.VerticalCommand;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Game is the master model of the game.
