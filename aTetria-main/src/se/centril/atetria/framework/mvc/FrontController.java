@@ -91,7 +91,7 @@ public abstract class FrontController implements Screen {
 		int level = 0;
 		FrontController ctrl = this;
 
-		while ( ctrl.isLeaf() ) {
+		while ( !ctrl.isRoot() ) {
 			ctrl = ctrl.frontCtrl;
 			level++;
 		}
