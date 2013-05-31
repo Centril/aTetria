@@ -21,7 +21,18 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public abstract class FrontController {
+/**
+ * <p>FrontController is a special type of Controller,<br/>
+ * that delegates to another controller and has concept of history.<br/>
+ * FrontController may be root, or leaf.</p>
+ *
+ * @author Centril<twingoow@gmail.com> / Mazdak Farrokhzad.
+ * @version 1.0
+ * @since May 31, 2013
+ */
+public abstract class FrontController implements Screen {
+	protected final FrontController frontCtrl;
+
 	/** The current controller. */
 	protected Controller ctrl;
 
@@ -30,6 +41,63 @@ public abstract class FrontController {
 
 	/** true = identity is used instead of equality when checking if controller is same. */
 	private boolean useIdentity;
+
+	/* --------------------------------------
+	 * Traversal/Hierarchy related:
+	 * --------------------------------------
+	 */
+
+	/**
+	 * Constructs FrontController as root level.
+	 */
+	public FrontController() {
+		this( null );
+	}
+
+	/**
+	 * Constructs FrontController as non-root level.
+	 *
+	 * @param ctrl the owner of this FrontController.
+	 */
+	public FrontController( FrontController ctrl ) {
+		this.frontCtrl = ctrl;
+	}
+
+	/**
+	 * Returns true if this FrontController has no FrontController above it.
+	 *
+	 * @return true if FrontController is top/root.
+	 */
+	public boolean isRoot() {
+		return this.frontCtrl == null;
+	}
+
+	/**
+	 * Returns true if this FrontController is the last-in-line FrontController before the real controllers.
+	 *
+	 * @return true if FrontController is leaf.
+	 */
+	public boolean isLeaf() {
+		return !(this.ctrl instanceof FrontController);
+	}
+
+	/**
+	 * Returns the level of this FrontController in chain.<br/>
+	 * 0 => {@link #isRoot()} == true.
+	 *
+	 * @return the level.
+	 */
+	public int level() {
+		int level = 0;
+		FrontController ctrl = this;
+
+		while ( ctrl.isLeaf() ) {
+			ctrl = ctrl.frontCtrl;
+			level++;
+		}
+
+		return level;
+	}
 
 	/* --------------------------------------
 	 * Hooks related:
@@ -42,7 +110,8 @@ public abstract class FrontController {
 	 * Anything that needs to be done before<br/>
 	 * {@link #initController(Controller)} is called must be done here.
 	 */
-	public void bootstrap() {
+	@Override
+	public void init() {
 	}
 
 	/**
@@ -146,8 +215,8 @@ public abstract class FrontController {
 	 * Disposes controller in use.
 	 */
 	protected void disposeCtrl() {
-		this.ctrl.killed();
 		this.ctrl.pause();
+		this.ctrl.killed();
 		this.ctrl.dispose();
 	}
 
@@ -300,7 +369,7 @@ public abstract class FrontController {
 	 * Should be called after FrontController is constructed.
 	 */
 	public void create() {
-		this.bootstrap();
+		this.init();
 
 		this.initController( this.getInitController() );
 	}
@@ -319,13 +388,19 @@ public abstract class FrontController {
 	 * Should be called when rendering is needed.
 	 */
 	public void render() {
-		this.ctrl.update();
-
 		this.preRender();
 
 		this.ctrl.view().render();
 
 		this.postRender();
+	}
+
+	/**
+	 * Called first in {@link #render()}.
+	 */
+	@Override
+	public void update() {
+		this.ctrl.update();
 	}
 
 	/**
@@ -346,7 +421,29 @@ public abstract class FrontController {
 	 * Should be called when controller should be disposed.
 	 */
 	public void dispose() {
+		this.ctrl.killed();
 		this.ctrl.dispose();
 		this.ctrl = null;
+	}
+
+	@Override
+	public View view() {
+		return this.ctrl.view();
+	}
+
+	@Override
+	public void toFront() {
+		if ( this.isLeaf() ) {
+			this.frontCtrl.change( this );
+		}
+	}
+
+	@Override
+	public boolean isFront() {
+		return this.isRoot() ? true : this.frontCtrl.isControllerFront( this );
+	}
+
+	@Override
+	public void killed() {
 	}
 }

@@ -38,7 +38,6 @@ import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Logger;
-import com.google.common.base.Preconditions;
 
 /**
  * FrontController is somewhat a Front Controller. 
@@ -67,8 +66,15 @@ public abstract class GdxFrontController extends FrontController implements Appl
 	 * Constructs the front controller.
 	 */
 	public GdxFrontController() {
+		this( null );
+	}
+
+	/**
+	 * Constructs the front controller as non-root.
+	 */
+	public GdxFrontController( GdxFrontController front ) {
+		super( front );
 		this.app = Gdx.app;
-		this.logger( new Logger( "none", Logger.ERROR ) );
 	}
 
 	/* ------------------------------
@@ -132,11 +138,11 @@ public abstract class GdxFrontController extends FrontController implements Appl
 	 * @param logger the logger.
 	 */
 	public void logger( Logger logger ) {
-		this.logger = Preconditions.checkNotNull( logger );
+		this.logger = logger;
 	}
 
 	/**
-	 * Returns the logger used.
+	 * Returns the logger used (if any).
 	 *
 	 * @return the logger used.
 	 */
@@ -145,7 +151,8 @@ public abstract class GdxFrontController extends FrontController implements Appl
 	}
 
 	/**
-	 * Sets whether or not to log FPS.
+	 * Sets whether or not to log FPS.<br/>
+	 * {@link #logger(Logger)} must have been set to non-null.
 	 *
 	 * @param flag true if FPS should be logged.
 	 */
@@ -157,13 +164,16 @@ public abstract class GdxFrontController extends FrontController implements Appl
 	 * Logs the current FPS.
 	 */
 	protected void logFPS() {
-		if ( this.logFps ) {
+		// Don't spam us with FPS-logging because of chain -> Only root.
+		if ( this.logFps && this.logger != null && this.isRoot() ) {
 			this.logger().debug( "FPS: " + Gdx.graphics.getFramesPerSecond() );
 		}
 	}
 
 	@Override
 	public void render() {
+		this.update();
+
 		this.logFPS();
 
 		super.render();
