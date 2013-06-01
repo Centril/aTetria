@@ -50,6 +50,7 @@ public class ATetriaGame extends GdxFrontController {
 
 	@Override
 	public void init() {
+		System.out.println( Gdx.app );
 		this.logger( new Logger( TITLE, LOG_LEVEL ) );
 		Gdx.graphics.setTitle( TITLE );
 

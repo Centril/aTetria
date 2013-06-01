@@ -47,7 +47,7 @@ import com.badlogic.gdx.utils.Logger;
  * @since May 27, 2013
  */
 public abstract class GdxFrontController extends FrontController implements ApplicationListener {
-	private final Application app;
+	private Application app;
 
 	private Logger logger;
 
@@ -74,7 +74,15 @@ public abstract class GdxFrontController extends FrontController implements Appl
 	 */
 	public GdxFrontController( GdxFrontController front ) {
 		super( front );
+	}
+
+	/**
+	 * {@inheritDoc}<br/>
+	 * If overridden, {@link GdxFrontController#create()} must be called.
+	 */
+	public void create() {
 		this.app = Gdx.app;
+		super.create();
 	}
 
 	/* ------------------------------
@@ -118,13 +126,10 @@ public abstract class GdxFrontController extends FrontController implements Appl
 	}
 
 	/**
-	 * Instructs libgdx to catch the back key.<br/>
-	 * If {@link #hasHistory()} == false nothing happens.
+	 * Instructs libgdx to catch the back key.
 	 */
 	public void catchBackKey() {
-		if ( this.hasHistory() ) {
-			this.app().getInput().setCatchBackKey( true );
-		}
+		this.app().getInput().setCatchBackKey( true );
 	}
 
 	/* ------------------------------
