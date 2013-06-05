@@ -47,7 +47,7 @@ public class OrderedTrappedList<E> extends TrappedList<E> {
 	}
 
 	/**
-	 * Returns a list iterator that forbids modification other than adding.
+	 * Returns a list iterator that forbids modification.
 	 *
 	 * @return the list iterator.
 	 */
@@ -56,13 +56,13 @@ public class OrderedTrappedList<E> extends TrappedList<E> {
 	}
 
 	/**
-	 * Returns a list iterator starting from index that forbids modification other than adding.
+	 * Returns a list iterator starting from index that forbids modification.
 	 *
 	 * @param index the starting index.
 	 * @return the list iterator.
 	 */
 	public ListIterator<E> listIterator( int index ) {
-		return AddOnlyIterator.forList( this.delegate(), index );
+		return ImmutableListIterator.forList( this.delegate(), index );
 	}
 
 	/**
