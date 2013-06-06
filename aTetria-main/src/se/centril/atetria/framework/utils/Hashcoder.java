@@ -45,9 +45,9 @@ package se.centril.atetria.framework.utils;
  * }
  * </pre>
  * @example <pre>
- * public final static HashCodeMaker hashCodeMaker = new HashCodeMaker();
+ * private final static Hashcoder hashcoder = new Hashcoder();
  * public int hashCode() {
- *	return hashCodeMaker.getHash( this.userId );
+ *	return hashcoder.getHash( this.userId );
  * }
  * </pre>
  */
