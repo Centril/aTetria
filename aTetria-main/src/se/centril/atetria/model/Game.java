@@ -154,6 +154,8 @@ public class Game {
 
 	private PieceRetriever retriever;
 
+	private boolean usingWallKick = true;
+
 	/* --------------------------------
 	 * Getter public interface.
 	 * --------------------------------
@@ -255,6 +257,24 @@ public class Game {
 	 */
 	public void setNextQueueSize( int size ) {
 		this.nextQueueSize = size;
+	}
+
+	/**
+	 * Sets whether or not to enable wall-kick.
+	 *
+	 * @param usingWallKick whether or not to enable wall-kick.
+	 */
+	public void setUsingWallKick( boolean usingWallKick ) {
+		this.usingWallKick = usingWallKick;
+	}
+
+	/**
+	 * Returns whether or not wall kick is enabled.
+	 *
+	 * @return whether or not wall kick is enabled.
+	 */
+	public boolean usingWallKick() {
+		return this.usingWallKick;
 	}
 
 	/* --------------------------------
@@ -434,12 +454,37 @@ public class Game {
 			newPiece = newPiece.rotate( ((RotationCommand) command) );
 			FinalPosition diff = this.currentPiece.getSize().sub( newPiece.getSize() );
 			newPos.add( diff.x() / 2, diff.y() / 2 );
+
+			this.adjustWallKick( newPos, newPiece );
 		} else {
 			throw new AssertionError( "ShouldNotHappenException" );
 		}
 
 		// Set to current.
 		return this.setCurrent( newPiece, newPos );
+	}
+
+	/**
+	 * Adjusts for wall kick if enabled.
+	 *
+	 * @param pos position to adjust.
+	 * @param piece the piece to adjust.
+	 */
+	private void adjustWallKick( Position pos, Piece piece ) {
+		if ( !this.usingWallKick() ) {
+			return;
+		}
+
+		int rightPos = pos.x() + piece.getWidth() - 1;
+		if ( rightPos >= this.board.getWidth() ) {
+			do {
+				pos.subX( 1 );
+			} while ( --rightPos >= this.board.getWidth() );
+		} else if ( pos.x() < 0 ) {
+			do {
+				pos.addX( 1 );
+			} while ( pos.x() < 0 );
+		}
 	}
 
 	/**
