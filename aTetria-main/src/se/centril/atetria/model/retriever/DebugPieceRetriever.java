@@ -16,42 +16,21 @@
  */
 package se.centril.atetria.model.retriever;
 
-import se.centril.atetria.framework.rng.Randomizer;
-import se.centril.atetria.framework.rng.RandomizerUtilizer;
 import se.centril.atetria.model.Piece;
-import se.centril.atetria.model.PieceFactory;
-import se.centril.atetria.model.PieceRetriever;
+import se.centril.atetria.model.Tetromino;
 
 /**
- * The default randomized implementation.
+ * Stupid piece retriever for debugging only.
  *
  * @author Centril<twingoow@gmail.com> / Mazdak Farrokhzad.
  * @version 1.0
- * @since May 27, 2013
+ * @since Jun 6, 2013
  */
-public class RandomizedPieceRetriever implements PieceRetriever, RandomizerUtilizer {
-	/** Pseudo Random Number Generator (PRNG) */
-	protected Randomizer rng;
-
-	/** The factory for pieces. */
-	protected PieceFactory pieceFactory;
-
-	/**
-	 * Sets the piece factory.
-	 *
-	 * @param factory the factory to set.
-	 */
-	public void setPieceFactory( PieceFactory factory ) {
-		this.pieceFactory = factory;
-	}
-
-	@Override
-	public void setRandomizer( Randomizer rng ) {
-		this.rng = rng;
-	}
+public class DebugPieceRetriever extends RandomizedPieceRetriever {
+	private static final Tetromino USE = Tetromino.LINE;
 
 	@Override
 	public Piece nextPiece() {
-		return this.pieceFactory.getRandom( this.rng );
+		return this.pieceFactory.get( USE );
 	}
 }
