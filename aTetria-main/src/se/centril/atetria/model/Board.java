@@ -16,8 +16,6 @@
  */
 package se.centril.atetria.model;
 
-import com.badlogic.gdx.Gdx;
-
 import se.centril.atetria.framework.geom.FinalPosition;
 import se.centril.atetria.framework.geom.Position;
 
@@ -96,10 +94,6 @@ public final class Board {
 	 * @return true if the board has overflowed.
 	 */
 	public boolean hasOverflow() {
-		int maxH = this.getMaxHeight();
-
-		Gdx.app.debug( "board", "maxH = " + maxH + ", h = " + this.getHeight() + ", ts = " + this.getTopSpace() );
-
 		return this.getMaxHeight() > this.getHeight() - this.getTopSpace();
 	}
 
