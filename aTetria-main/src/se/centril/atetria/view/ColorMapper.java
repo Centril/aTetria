@@ -16,15 +16,15 @@
  */
 package se.centril.atetria.view;
 
-import java.awt.Color;
+import com.badlogic.gdx.graphics.Color;
 
 import se.centril.atetria.framework.utils.factory.FactoryInstantiator;
 import se.centril.atetria.model.Tetromino;
 
-final class TileColorFactory extends Tetromino.ToFactory<Color> {
-	private static class TileInstantiator implements FactoryInstantiator<Tetromino, Color> {
+final class ColorMapper extends Tetromino.ToFactory<Color> {
+	private static class ColorHolder implements FactoryInstantiator<Tetromino, Color> {
 		private final Color color;
-		public TileInstantiator( Color color ) { this.color = color; }
+		public ColorHolder( Color color ) { this.color = color; }
 		@Override
 		public Color get( Tetromino key ) {
 			return this.color;
@@ -32,12 +32,12 @@ final class TileColorFactory extends Tetromino.ToFactory<Color> {
 	};
 
 	{
-		add( Tetromino.SQUARE, new TileInstantiator( Color.YELLOW ) );
-		add( Tetromino.LINE, new TileInstantiator( Color.CYAN ) );
-		add( Tetromino.SIGMA, new TileInstantiator( Color.GREEN ) );
-		add( Tetromino.ZETA, new TileInstantiator( Color.RED ) );
-		add( Tetromino.TAU, new TileInstantiator( new Color( 170, 0, 255 ) ) ); // purple
-		add( Tetromino.LAMBDA, new TileInstantiator( new Color( 255, 165, 0 ) ) );
-		add( Tetromino.LAMBDA_MIRRORED, new TileInstantiator( Color.BLUE ) );
+		add( Tetromino.SQUARE, new ColorHolder( Color.YELLOW ) );
+		add( Tetromino.LINE, new ColorHolder( Color.CYAN ) );
+		add( Tetromino.SIGMA, new ColorHolder( Color.GREEN ) );
+		add( Tetromino.ZETA, new ColorHolder( Color.RED ) );
+		add( Tetromino.TAU, new ColorHolder( new Color( 170f / 255f, 0f, 1f, 1f ) ) ); // purple
+		add( Tetromino.LAMBDA, new ColorHolder( new Color( 1f, 165f / 255f, 0f, 1f ) ) );
+		add( Tetromino.LAMBDA_MIRRORED, new ColorHolder( Color.BLUE ) );
 	}
 }

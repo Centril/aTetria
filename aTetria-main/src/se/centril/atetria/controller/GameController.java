@@ -20,10 +20,14 @@ import net.engio.mbassy.listener.Handler;
 import se.centril.atetria.controller.input.CommandReceiver;
 import se.centril.atetria.controller.input.FallbackCommandProcessor;
 import se.centril.atetria.framework.gdx.BaseGdxController;
+import se.centril.atetria.framework.rng.MersenneTwisterFast;
 import se.centril.atetria.model.Board;
+import se.centril.atetria.model.Board.SanityException;
 import se.centril.atetria.model.Game;
 import se.centril.atetria.model.Game.GameOverEvent;
+import se.centril.atetria.model.PieceFactory;
 import se.centril.atetria.model.command.Command;
+import se.centril.atetria.model.retriever.RandomizedPieceRetriever;
 import se.centril.atetria.view.GameView;
 
 /**
@@ -36,10 +40,26 @@ import se.centril.atetria.view.GameView;
 public class GameController extends BaseGdxController implements CommandReceiver {
 	private final Game game;
 
+	private boolean update = true;
+
+	private float deltaTime;
+
+	private float updateSpeed = 0.5f;
+
 	public GameController() {
-		super( new GameView() );
+		super();
+
+		// Factory: Model.
+		RandomizedPieceRetriever rpr = new RandomizedPieceRetriever();
+		rpr.setRandomizer( new MersenneTwisterFast() );
+		rpr.setPieceFactory( new PieceFactory() );
 
 		this.game = new Game( new Board( 10, 20, 4 ) );
+		this.game.setNextQueueSize( 5 );
+		this.game.setPieceRetriever( rpr );
+
+		// Factory: View.
+		this.view( new GameView( game ) );
 	}
 
 	public void init() {
@@ -53,6 +73,21 @@ public class GameController extends BaseGdxController implements CommandReceiver
 
 	@Override
 	public void update() {
+		if ( this.update == false ) {
+			return;
+		}
+
+		this.deltaTime += this.graphics().getDeltaTime();
+
+		try {
+			if ( this.deltaTime > this.updateSpeed ) {
+				this.game.tick();
+				this.deltaTime = 0;
+			}
+		} catch( SanityException e ) {
+			this.update = false;
+		//	logger().debug( "insanity!", e );
+		}
 	}
 
 	@Handler
@@ -67,13 +102,9 @@ public class GameController extends BaseGdxController implements CommandReceiver
 
 	@Override
 	public void onCommandStart( Command command ) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void onCommandEnd( Command command ) {
-		// TODO Auto-generated method stub
-		
 	}
 }
