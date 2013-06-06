@@ -16,6 +16,8 @@
  */
 package se.centril.atetria.model;
 
+import com.badlogic.gdx.Gdx;
+
 import se.centril.atetria.framework.geom.FinalPosition;
 import se.centril.atetria.framework.geom.Position;
 
@@ -47,13 +49,17 @@ public final class Board {
 	/** Indicates that a state in the {@link #grid} is empty (null). */
 	public final static Piece EMPTY = null;
 
-	/**
-	 * Stores the state of each position on grid of board.
-	 */
+	/** Stores the state of each position on grid of board. */
 	private Piece[][] grid;
+	private int[] widths;
+	private int[] heights;
+	private int maxHeight;
 
-	/** Holds a deep copy of grid used for undoing/reverting back to commited state. */
+	/** Holds a deep copy of grid used for undoing/reverting back to committed state. */
 	private Piece[][] gridCopy;
+	private int[] widthsCopy;
+	private int[] heightsCopy;
+	private int maxHeightCopy;
 
 	/** The dimensions of board. */
 	private final FinalPosition dim;
@@ -88,6 +94,10 @@ public final class Board {
 	 * @return true if the board has overflowed.
 	 */
 	public boolean hasOverflow() {
+		int maxH = this.getMaxHeight();
+
+		Gdx.app.debug( "board", "maxH = " + maxH + ", h = " + this.getHeight() + ", ts = " + this.getTopSpace() );
+
 		return this.getMaxHeight() > this.getHeight() - this.getTopSpace();
 	}
 
@@ -107,6 +117,15 @@ public final class Board {
 	private void initGrid() {
 		this.grid = this.initializedGrid();
 		this.gridCopy = null;
+
+		this.widths = new int[this.getHeight()];
+		this.widthsCopy = null;
+
+		this.heights = new int[this.getWidth()];
+		this.heightsCopy = null;
+
+		this.maxHeight = 0;
+		this.maxHeightCopy = 0;
 	}
 
 	/**
@@ -128,7 +147,7 @@ public final class Board {
 	}
 
 	/**
-	 * Returns a copy of dimensions of board.
+	 * Returns dimensions of board.
 	 *
 	 * @return The boards dimensions.
 	 */
@@ -295,6 +314,7 @@ public final class Board {
 			}
 
 			this.setState( piece, pos );
+			this.updateMax( pos );
 
 			if ( this.canFillRow( pos.y() ) ) {
 				// Placement results in a filled row, yay!
@@ -303,6 +323,32 @@ public final class Board {
 		}
 
 		return currState;
+	}
+
+	/**
+	 * Updates max heights & widths n stuff when a position gets filled.
+	 *
+	 * @param pos the position that will be filled.
+	 */
+	private void updateMax( Position pos ) {
+		this.updateMax( pos.x(), pos.y() );
+	}
+
+	/**
+	 * Updates max heights & widths n stuff when a position gets filled.
+	 *
+	 * @param x the x that will be filled.
+	 * @param y the y that will be filled.
+	 */
+	private void updateMax( int x, int y ) {
+		this.widths[y] += 1;
+		if ( y > this.heights[x] ) {
+			if ( y > this.maxHeight ) {
+				this.maxHeight = y;
+			}
+
+			this.heights[x] = y;
+		}
 	}
 
 	/**
@@ -322,6 +368,24 @@ public final class Board {
 		for ( int i = 0; i < this.getWidth(); i++ ) {
 			this.gridCopy[i] = this.grid[i].clone();
 		}
+
+		this.widthsCopy = new int[this.widths.length];
+		this.heightsCopy = new int[this.heights.length];
+
+		this.copyArr( this.widths, this.widthsCopy );
+		this.copyArr( this.heights, this.heightsCopy );
+
+		this.maxHeightCopy = this.maxHeight;
+	}
+
+	/**
+	 * Does a copy from src to dest.
+	 *
+	 * @param src source array.
+	 * @param dest destination array.
+	 */
+	private void copyArr( int[] src, int[] dest ) {
+		System.arraycopy( src, 0, dest, 0, src.length );
 	}
 
 	/**
@@ -352,12 +416,23 @@ public final class Board {
 		for ( int y = 0; y < this.getHeight(); y++ ) {
 			if ( this.canFillRow( y ) ) {
 				++filledRows;
+
+				// Row will be cleared == 0 in width.
+				this.widths[y] = 0;
 			} else if ( filledRows > 0 ) {
 				for ( int x = 0; x < this.getWidth(); x++ ) {
 					this.setState( this.getState( x, y ), x, y - filledRows );
 					this.setState( EMPTY, x, y );
 				}
 			}
+		}
+
+		// Recalculate column heights.
+		if ( filledRows > 0 ) {
+			for ( int x = 0; x < this.heights.length; x++ ) {
+				this.heights[x] -= filledRows;
+			}
+			this.maxHeight -= filledRows;
 		}
 
 		return filledRows;
@@ -372,13 +447,22 @@ public final class Board {
 	 * {@link #undo()} twice in a row, then the second {@link #undo()} does nothing.</p>
 	 */
 	public void undo() {
-		if ( this.gridCopy == null ) {
+		if ( this.isCommitted() ) {
 			return;
 		}
 
 		// Let grid point to where gridCopy was, and clear gridCopy reference.
 		this.grid = this.gridCopy;
 		this.gridCopy = null;
+
+		this.widths = this.widthsCopy;
+		this.widthsCopy = null;
+
+		this.heights = this.heightsCopy;
+		this.heightsCopy = null;
+
+		this.maxHeight = this.maxHeightCopy;
+		this.maxHeightCopy = 0;
 	}
 
 	/**
@@ -390,17 +474,22 @@ public final class Board {
 	}
 
 	/**
+	 * Returns whether or not the board is in a committed state or not.
+	 *
+	 * @return true if the board is in a committed state.
+	 */
+	public boolean isCommitted() {
+		return this.gridCopy == null;
+	}
+
+	/**
 	 * Returns the max column height present in the board.<br/>
 	 * For an empty board this is 0.
 	 *
 	 * @return The max column height in board.
 	 */
 	public int getMaxHeight() {
-		int height = 0;
-		for ( int i = 0; i < this.getWidth(); i++ ) {
-			height = Math.max( height, this.getColumnHeight( i ) );
-		}
-		return height;
+		return this.maxHeight;
 	}
 	
 	/**
@@ -427,35 +516,15 @@ public final class Board {
 	}
 
 	/**
-	 * Returns the height of the given column, 
-	 * which is the y-value of the highest block + 1.
-	 * The height is 0 if the column contains no blocks.
+	 * Returns the height of the given column,<br/>
+	 * which is the y-value of the highest block + 1.<br/>
+	 * The height is 0 if the column contains no blocks.<br/>
 	 *
 	 * @param x The no. x column
 	 * @return The height of the column x.
 	 */
 	public int getColumnHeight( final int x ) {
-		/*
-		 * Strategy discussion: Iterate forward or backwards?
-		 * We pose that it is better to start from bottom to up
-		 * because a skilled player will probably not allow
-		 * blocks to stack to high and thus if we begin from
-		 * the bottom to up (forward iteration) we are likely to loop less.
-		 *
-		 * If the user plays crap it will end the game
-		 * quickly so it ain't an issue.
-		 *
-		 * However! Iterating backwards claims much less
-		 * operations per iteration anyhow, so we use that!
-		 */
-		for ( int y = this.getHeight() - 1; y >= 0; y-- ) {
-			if ( this.isFilled( x, y ) ) {
-				return y + 1;
-			}
-		}
-
-		// No blocks, height is 0.
-		return 0;
+		return this.heights[x];
 	}
 
 	/**
@@ -465,13 +534,6 @@ public final class Board {
 	 * @return The number of filled blocks in row y.
 	 */
 	public int getRowWidth( final int y ) {
-		int nFilled = 0;
-		for ( int x = 0; x < this.getWidth(); x++ ) {
-			if ( this.isFilled( x, y ) ) {
-				nFilled++;
-			}
-		}
-
-		return nFilled;
+		return this.widths[y];
 	}
 }
