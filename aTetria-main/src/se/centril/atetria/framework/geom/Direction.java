@@ -21,6 +21,11 @@ package se.centril.atetria.framework.geom;
  * Has EAST, SOUTHEAST, WEST, SOUTHWEST, NORTHWEST, NORTH, SOUTH, NORTHEAST and NONE directions.
  */
 public enum Direction {
+	NONE	( 0, 0 ) {
+		public Direction getOpposite() {
+			return NONE;
+		}
+	},
 	WEST	(-1, 0) {
 		public Direction getOpposite() {
 			return EAST;
