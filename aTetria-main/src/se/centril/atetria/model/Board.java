@@ -46,6 +46,8 @@ import se.centril.atetria.framework.geom.Position;
  * {@link #clearRows()}</p>
  */
 public final class Board {
+	public static boolean DEBUG = true;
+
 	/** Indicates that a state in the {@link #grid} is empty (null). */
 	public final static Piece EMPTY = null;
 
@@ -322,6 +324,10 @@ public final class Board {
 			}
 		}
 
+		if ( currState != PlacementState.BAD ) {
+			this.sanityCheck();
+		}
+
 		return currState;
 	}
 
@@ -342,13 +348,23 @@ public final class Board {
 	 */
 	private void updateMax( int x, int y ) {
 		this.widths[y] += 1;
-		if ( y > this.heights[x] ) {
-			if ( y > this.maxHeight ) {
-				this.maxHeight = y;
-			}
 
-			this.heights[x] = y;
+		if ( ++y > this.heights[x] ) {
+			this.heights[x] = this.tryMaxHeight( y );
 		}
+	}
+
+	/**
+	 * Tries a new max height if more than current max height.
+	 *
+	 * @param height the new height max to try.
+	 */
+	private int tryMaxHeight( int height ) {
+		if ( height > this.maxHeight ) {
+			this.maxHeight = height;
+		}
+
+		return height;
 	}
 
 	/**
@@ -416,26 +432,39 @@ public final class Board {
 		for ( int y = 0; y < this.getHeight(); y++ ) {
 			if ( this.canFillRow( y ) ) {
 				++filledRows;
-
-				// Row will be cleared == 0 in width.
-				this.widths[y] = 0;
 			} else if ( filledRows > 0 ) {
+				int dest = y - filledRows;
+				this.widths[dest] = this.widths[y];
+				this.widths[y] = 0;
+
 				for ( int x = 0; x < this.getWidth(); x++ ) {
-					this.setState( this.getState( x, y ), x, y - filledRows );
+					this.setState( this.getState( x, y ), x, dest );
 					this.setState( EMPTY, x, y );
 				}
 			}
 		}
 
-		// Recalculate column heights.
+		// Recalculate column heights & max height.
 		if ( filledRows > 0 ) {
+			this.maxHeight = 0;
 			for ( int x = 0; x < this.heights.length; x++ ) {
-				this.heights[x] -= filledRows;
+				this.heights[x] = this.tryMaxHeight( this.computeColHeight( x ) );
 			}
-			this.maxHeight -= filledRows;
 		}
 
+		this.sanityCheck();
+
 		return filledRows;
+	}
+
+	/**
+	 * Returns true if the board is completely empty.<br/>
+	 * This is the same as <code>{@link #getMaxHeight()} == 0.</code>
+	 *
+	 * @return true if the board is empty.
+	 */
+	public boolean isEmpty() {
+		return this.getMaxHeight() == 0;
 	}
 
 	/**
@@ -463,6 +492,8 @@ public final class Board {
 
 		this.maxHeight = this.maxHeightCopy;
 		this.maxHeightCopy = 0;
+
+		this.sanityCheck();
 	}
 
 	/**
@@ -535,5 +566,94 @@ public final class Board {
 	 */
 	public int getRowWidth( final int y ) {
 		return this.widths[y];
+	}
+
+	/**
+	 * Computes the column height.
+	 *
+	 * @param x the column.
+	 * @return the height.
+	 */
+	private int computeColHeight( int x ) {
+		int height = 0;
+
+		/*
+		 * Strategy discussion: Iterate forward or backwards?
+		 * We pose that it is better to start from bottom to up
+		 * because a skilled player will probably not allow
+		 * blocks to stack to high and thus if we begin from
+		 * the bottom to up (forward iteration) we are likely to loop less.
+		 *
+		 * If the user plays crap it will end the game
+		 * quickly so it ain't an issue.
+		 *
+		 * However! Iterating backwards claims much less
+		 * operations per iteration anyhow, so we use that!
+		 */
+		for ( int y = this.getHeight() - 1; y >= 0; y-- ) {
+			if ( this.isFilled( x, y ) ) {
+				height = y + 1;
+				break;
+			}
+		}
+
+		return height;
+	}
+
+	/**
+	 * Performs sanity check on all redundancies of board (widths, heights, maxHeight, topSpace).
+	 */
+	private void sanityCheck() {
+		if ( !DEBUG ) {
+			return;
+		}
+
+		// Check array sizes.
+		if ( this.heights.length != this.getWidth() ) {
+			throw new SanityException( "Insanity! Illegal length for heights array = " + this.heights.length + ", should be = " + this.getWidth() );
+		}
+
+		if ( this.widths.length != this.getHeight() ) {
+			throw new SanityException( "Insanity! Illegal length for widths array = " + this.widths.length + ", should be = " + this.getHeight() );
+		}
+
+		// Width sanity.
+		for ( int y = 0; y < this.getHeight(); y++ ) {
+			int nFilled = 0;
+			for ( int x = 0; x < this.getWidth(); x++ ) {
+				if ( this.isFilled( x, y ) ) {
+					nFilled++;
+				}
+			}
+
+			if ( this.widths[y] != nFilled ) {
+				throw new SanityException( "Insanity! Row y = " + y + " has unmatching [real, stored] widths = [" + nFilled + ", " + this.widths[y] + "]" );
+			}
+		}
+
+		// Height sanity.
+		int maxHeight = 0;
+		for ( int x = 0; x < this.getWidth(); x++ ) {
+			int height = this.computeColHeight( x );
+			if ( this.heights[x] != height ) {
+				throw new SanityException( "Insanity! Column x = " + x + " has unmatching [real, stored] heights = [" + height + ", " + this.heights[x] + "]" );
+			}
+
+			if ( height > maxHeight ) {
+				maxHeight = height;
+			}
+		}
+
+		if ( maxHeight != this.maxHeight ) {
+			throw new SanityException( "Insanity! max height has unmatching [real, stored] values = [" + maxHeight + ", " + this.maxHeight + "]" );
+		}
+	}
+
+	public static class SanityException extends RuntimeException {
+		private static final long serialVersionUID = 5426367390688265057L;
+
+		public SanityException( String desc ) {
+			super( desc );
+		}
 	}
 }

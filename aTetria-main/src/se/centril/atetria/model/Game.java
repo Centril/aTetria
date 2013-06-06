@@ -258,7 +258,7 @@ public class Game {
 	}
 
 	/* --------------------------------
-	 * Logic interface.
+	 * Public Logic interface.
 	 * --------------------------------
 	 */
 
@@ -266,6 +266,7 @@ public class Game {
 	 * Called when the piece should be commanded {@link VerticalCommand#DOWN} on timer.
 	 */
 	public void tick() {
+		this.checkGameOver();
 		this.controlPiece( VerticalCommand.DOWN );
 	}
 
@@ -276,6 +277,8 @@ public class Game {
 	 * @param command the command.
 	 */
 	public void command( final Command command ) {
+		this.checkGameOver();
+
 		if ( command instanceof PieceCommand ) {
 			this.controlPiece( (PieceCommand) command );
 		} else if ( command instanceof ExtraCommand ) {
@@ -321,9 +324,6 @@ public class Game {
 	 * @throws GameOverException If board is too tall.
 	*/
 	private void controlPiece( final PieceCommand command ) {
-		if ( this.isGameOver() ) {
-			throw new IllegalArgumentException( "The game is over." );
-		}
 
 		this.init();
 
@@ -335,6 +335,12 @@ public class Game {
 		// Try out the new position + piece (rolls back if it doesn't work)
 		PlacementState result = this.tryNewPosition( command );
 		boolean failed = result.isFailed();
+
+		if ( failed ) {
+			if ( this.currentPiece != null ) {
+				this.board.place( this.currentPiece, this.currentPos );
+			}
+		}
 
 		if ( result.isRowFilled() ) {
 			// Row clearing is going to happen, notify listeners!
@@ -506,6 +512,15 @@ public class Game {
 		 */
 		if ( result.isFailed() ) {
 			this.gameOver();
+		}
+	}
+
+	/**
+	 * Sanity check: throw if game is over.
+	 */
+	private void checkGameOver() {
+		if ( this.isGameOver() ) {
+			throw new IllegalArgumentException( "The game is over." );
 		}
 	}
 
