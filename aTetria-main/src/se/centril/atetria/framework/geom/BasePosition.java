@@ -16,6 +16,8 @@
  */
 package se.centril.atetria.framework.geom;
 
+import java.util.Objects;
+
 /**
  * Position is a two-dimensional position class.
  *
@@ -126,5 +128,22 @@ public abstract class BasePosition implements Position  {
 
 	public String toString() {
 		return "(" + this.x() + "," + this.y() + ")";
+	}
+
+	public boolean equals( Object obj ) {
+		if ( this == obj ) {
+			return true;
+		}
+
+		if ( obj.getClass() == this.getClass() ) {
+			Position rhs = (Position) obj;
+			return this.x() == rhs.x() && this.y() == rhs.y();
+		}
+
+		return false;
+	}
+
+	public int hashCode() {
+		return Objects.hash( this.x(), this.y() );
 	}
 }

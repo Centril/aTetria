@@ -16,6 +16,8 @@
  */
 package se.centril.atetria.framework.geom;
 
+import java.util.Objects;
+
 public abstract class BasePosition3 extends BasePosition implements Position3 {
 	protected int z;
 
@@ -115,5 +117,13 @@ public abstract class BasePosition3 extends BasePosition implements Position3 {
 
 	public String toString() {
 		return "(" + this.x() + "," + this.y() + "," + this.z() + ")";
+	}
+
+	public boolean equals( Object obj ) {
+		return super.equals( obj ) && this.z() == ((Position3) obj).z();
+	}
+
+	public int hashCode() {
+		return Objects.hash( this.x(), this.y(), this.z() );
 	}
 }
