@@ -117,7 +117,7 @@ public abstract class BasePosition implements Position  {
 	}
 
 	protected boolean inRange( int val, int max ) {
-		return val >= 0 && val <= max;
+		return val >= 0 && val < max;
 	}
 
 	public Position clone() {
