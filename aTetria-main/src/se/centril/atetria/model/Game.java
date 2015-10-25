@@ -224,6 +224,15 @@ public class Game {
 		return this.nextQueueSize;
 	}
 
+	/**
+	 * Returns whether or not wall kick is enabled.
+	 *
+	 * @return whether or not wall kick is enabled.
+	 */
+	public boolean usingWallKick() {
+		return this.usingWallKick;
+	}
+
 	/* --------------------------------
 	 * Constructors + setters interface.
 	 * --------------------------------
@@ -266,15 +275,6 @@ public class Game {
 	 */
 	public void setUsingWallKick( boolean usingWallKick ) {
 		this.usingWallKick = usingWallKick;
-	}
-
-	/**
-	 * Returns whether or not wall kick is enabled.
-	 *
-	 * @return whether or not wall kick is enabled.
-	 */
-	public boolean usingWallKick() {
-		return this.usingWallKick;
 	}
 
 	/* --------------------------------

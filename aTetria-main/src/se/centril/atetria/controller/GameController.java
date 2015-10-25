@@ -44,7 +44,7 @@ public class GameController extends BaseGdxController implements CommandReceiver
 
 	private float deltaTime;
 
-	private float updateSpeed = 0.5f;
+	private float updateSpeed = 0.3f;
 
 	public GameController() {
 		super();

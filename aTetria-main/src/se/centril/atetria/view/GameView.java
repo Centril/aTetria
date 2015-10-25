@@ -16,6 +16,8 @@
  */
 package se.centril.atetria.view;
 
+import java.util.List;
+
 import se.centril.atetria.framework.gdx.BaseGdxView;
 import se.centril.atetria.framework.geom.Position;
 import se.centril.atetria.framework.utils.factory.Factory;
@@ -23,6 +25,9 @@ import se.centril.atetria.model.Board;
 import se.centril.atetria.model.Game;
 import se.centril.atetria.model.Piece;
 import se.centril.atetria.model.Tetromino;
+import se.centril.atetria.model.segmenter.SegPart;
+import se.centril.atetria.model.segmenter.Segment;
+import se.centril.atetria.model.segmenter.StickySegmentFinder;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -78,14 +83,16 @@ public class GameView extends BaseGdxView {
 		sprite.setPosition(-sprite.getWidth()/2, -sprite.getHeight()/2);
 
 		shapeRenderer = new ShapeRenderer();
+
+		/*
+		List<Segment> segments = new StickySegmentFinder( this.game.getBoard() ).find();
+
+		logger().debug( segments.toString() );
+		*/
 	}
 
 	private void updateCellSize() {
 		cellSize = camera.viewportHeight / this.game.getBoard().getHeight();
-	}
-
-	private Position dim() {
-		return this.game.getBoard().getSize();
 	}
 
 	@Override
@@ -121,7 +128,6 @@ public class GameView extends BaseGdxView {
 
 		basify();
 
-		// 
 		shapeRenderer.begin( ShapeType.Filled );
 		for ( int x = 0; x < dim.x(); x++ ) {
 			for ( int y = 0; y < dim.y(); y++ ) {
@@ -132,16 +138,11 @@ public class GameView extends BaseGdxView {
 				}
 
 				Color color = colorMapper.get( piece.getType() );
-
 				Vector2 vec = temp.cpy().add( x * cellSize, y * cellSize );
 
 				shapeRenderer.setColor( color );
 				shapeRenderer.rect( vec.x, vec.y, cellSize, cellSize );
-
-				//vec.add( 0, cellSize );
 			}
-
-			//vec.add( cellSize, 0 );
 		}
 		shapeRenderer.end();
 	}
@@ -166,6 +167,10 @@ public class GameView extends BaseGdxView {
 			}
 		}
 		shapeRenderer.end();
+	}
+
+	private Position dim() {
+		return this.game.getBoard().getSize();
 	}
 
 	private void renderGridLines() {

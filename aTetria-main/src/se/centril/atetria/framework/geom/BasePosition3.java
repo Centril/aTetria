@@ -120,7 +120,7 @@ public abstract class BasePosition3 extends BasePosition implements Position3 {
 	}
 
 	public boolean equals( Object obj ) {
-		return super.equals( obj ) && this.z() == ((Position3) obj).z();
+		return this == obj || ( super.equals( obj ) && obj instanceof Position3 && this.z() == ((Position3) obj).z());
 	}
 
 	public int hashCode() {

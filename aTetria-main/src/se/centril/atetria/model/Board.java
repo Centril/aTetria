@@ -16,8 +16,12 @@
  */
 package se.centril.atetria.model;
 
+import java.util.List;
+
 import se.centril.atetria.framework.geom.FinalPosition;
 import se.centril.atetria.framework.geom.Position;
+import se.centril.atetria.model.segmenter.Segment;
+import se.centril.atetria.model.segmenter.StickySegmentFinder;
 
 /**
  * Board represents the grid-board of the game.
@@ -65,6 +69,8 @@ public final class Board {
 	private final FinalPosition dim;
 
 	private final int topSpace;
+
+	private ClearMode clearMode = ClearMode.STANDARD;
 
 	/**
 	 * Constructs a Board with given width & height.
@@ -415,6 +421,50 @@ public final class Board {
 	 * @return Amount of rows cleared, 0 if none.
 	 */
 	public int clearRows() {
+		int filledRows = 0;
+
+		switch ( this.clearMode ) {
+		case STANDARD:
+			filledRows = this.clearStandard();
+			break;
+
+		case CASCADE:
+			this.clearSticky();
+			break;
+
+		default:
+			throw new AssertionError( "ShouldNotHappenException" );
+		}
+
+		this.sanityCheck();
+
+		return filledRows;
+	}
+
+	private int clearSticky() {
+		int filledRows = 0;
+
+		// First pass: clear all lines.
+		for ( int y = 0; y < this.getHeight(); y++ ) {
+			if ( this.canFillRow( y ) ) {
+				++filledRows;
+				for ( int x = 0; x < this.getWidth(); x++ ) {
+					this.setState( EMPTY, x, y );
+				}
+			}
+		}
+
+		if ( filledRows == 0 ) {
+			return 0;
+		}
+
+		// Second pass: clump to segments.
+		List<Segment> segments = new StickySegmentFinder( this ).find();
+
+		return filledRows;
+	}
+
+	private int clearCascade() {
 		/*
 		 * Complexity: O(height).
 		 * - The row was filled: increment steps to move down/filled-rows.
@@ -446,10 +496,50 @@ public final class Board {
 			}
 		}
 
-		this.sanityCheck();
+		return filledRows;
+	}
+
+
+	/**
+	 * Uses the standard clearing method with no gravity.
+	 *
+	 * @return the amount of filled rows.
+	 */
+	private int clearStandard() {
+		/*
+		 * Complexity: O(height).
+		 * - The row was filled: increment steps to move down/filled-rows.
+		 * - If we've steps to move down & we didn't find a filled row this
+		 * 		time we can move down n(filledRows) rows,
+		 * 		swap copy row y to y - filledRows & clear y.
+		 */
+		int filledRows = 0;
+		for ( int y = 0; y < this.getHeight(); y++ ) {
+			if ( this.canFillRow( y ) ) {
+				++filledRows;
+			} else if ( filledRows > 0 ) {
+				int dest = y - filledRows;
+				this.widths[dest] = this.widths[y];
+				this.widths[y] = 0;
+
+				for ( int x = 0; x < this.getWidth(); x++ ) {
+					this.setState( this.getState( x, y ), x, dest );
+					this.setState( EMPTY, x, y );
+				}
+			}
+		}
+
+		// Recalculate column heights & max height.
+		if ( filledRows > 0 ) {
+			this.maxHeight = 0;
+			for ( int x = 0; x < this.heights.length; x++ ) {
+				this.heights[x] = this.tryMaxHeight( this.computeColHeight( x ) );
+			}
+		}
 
 		return filledRows;
 	}
+
 
 	/**
 	 * Returns true if the board is completely empty.<br/>

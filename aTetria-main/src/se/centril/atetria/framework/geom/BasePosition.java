@@ -135,7 +135,7 @@ public abstract class BasePosition implements Position  {
 			return true;
 		}
 
-		if ( obj.getClass() == this.getClass() ) {
+		if ( this instanceof Position ) {
 			Position rhs = (Position) obj;
 			return this.x() == rhs.x() && this.y() == rhs.y();
 		}
